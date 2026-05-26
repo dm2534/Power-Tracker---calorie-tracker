@@ -53,7 +53,7 @@ export const LogFood = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!result) return;
     
     const user = db.getUser();
@@ -74,7 +74,7 @@ export const LogFood = () => {
       foodName: result.food_items.map(i => i.name).join(', ')
     };
 
-    db.addLog(log);
+    await db.addLog(log);
     navigate('/dashboard');
   };
 

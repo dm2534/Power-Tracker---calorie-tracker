@@ -11,9 +11,17 @@ export const Dashboard = () => {
   const [todayLogs, setTodayLogs] = useState<FoodLog[]>([]);
 
   useEffect(() => {
-    const u = db.getUser();
-    if (u) setUser(u);
-    setTodayLogs(db.getTodayLogs());
+    const load = async () => {
+      const localUser = db.getUser();
+      if (!localUser) {
+        return;
+      }
+      setUser(localUser);
+      const fetchedLogs = await db.fetchLogs(localUser.id);
+      setTodayLogs(fetchedLogs.filter((log) => log.loggedAt.startsWith(new Date().toISOString().split('T')[0])));
+    };
+
+    load();
   }, []);
 
   if (!user) return null;
@@ -31,9 +39,12 @@ export const Dashboard = () => {
   const remaining = user.calorieTarget - totalCalories;
   const isOver = remaining < 0;
 
-  const handleDelete = (id: string) => {
-    db.deleteLog(id);
-    setTodayLogs(db.getTodayLogs());
+  const handleDelete = async (id: string) => {
+    await db.deleteLog(id);
+    if (user) {
+      const logs = await db.fetchLogs(user.id);
+      setTodayLogs(logs.filter((log) => log.loggedAt.startsWith(new Date().toISOString().split('T')[0])));
+    }
   };
 
   return (

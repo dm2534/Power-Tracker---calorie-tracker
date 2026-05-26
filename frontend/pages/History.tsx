@@ -7,7 +7,17 @@ export const History = () => {
   const [logs, setLogs] = useState<FoodLog[]>([]);
 
   useEffect(() => {
-    setLogs(db.getLogs());
+    const load = async () => {
+      const user = db.getUser();
+      if (user) {
+        const logs = await db.fetchLogs(user.id);
+        setLogs(logs);
+      } else {
+        setLogs(db.getLogs());
+      }
+    };
+
+    load();
   }, []);
 
   // Group logs by date

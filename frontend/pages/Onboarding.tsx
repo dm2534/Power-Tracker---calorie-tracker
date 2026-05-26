@@ -37,7 +37,7 @@ export const Onboarding = () => {
     return Math.round(tdee);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const target = calculateCalories();
     const profile: UserProfile = {
       id: 'user_' + Date.now(),
@@ -45,7 +45,7 @@ export const Onboarding = () => {
       calorieTarget: target,
       createdAt: new Date().toISOString()
     };
-    db.saveUser(profile);
+    await db.saveUser(profile);
     navigate('/dashboard');
   };
 

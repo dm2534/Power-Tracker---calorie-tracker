@@ -17,7 +17,11 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/iterator"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -89,6 +93,7 @@ var (
 		ApiBackendHost: "0.0.0.0",
 		ApiBackendPort: "5000",
 	}
+	firestoreClient *firestore.Client
 )
 
 type apiClient struct {
@@ -183,6 +188,8 @@ func main() {
 	populateConfig()
 	ensureDataFolder(defaultDataFolder)
 	compilePatterns()
+	initFirestore(context.Background())
+	defer closeFirestore()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc(healthEndpoint, cors(healthHandler))
@@ -234,6 +241,27 @@ func populateConfig() {
 	config.GoogleCloudLocation = os.Getenv("GOOGLE_CLOUD_LOCATION")
 	config.GoogleCloudProject = os.Getenv("GOOGLE_CLOUD_PROJECT")
 	config.ProxyHeader = os.Getenv("PROXY_HEADER")
+}
+
+func initFirestore(ctx context.Context) {
+	if config.GoogleCloudProject == "" {
+		log.Println("Firestore disabled: GOOGLE_CLOUD_PROJECT is not set")
+		return
+	}
+
+	client, err := firestore.NewClient(ctx, config.GoogleCloudProject)
+	if err != nil {
+		log.Printf("Firestore initialization failed: %v", err)
+		return
+	}
+	firestoreClient = client
+	log.Println("Firestore connected")
+}
+
+func closeFirestore() {
+	if firestoreClient != nil {
+		_ = firestoreClient.Close()
+	}
 }
 
 func compilePatterns() {
@@ -365,6 +393,26 @@ func analyzeHandler(w http.ResponseWriter, r *http.Request) {
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
+		id := r.URL.Query().Get("id")
+		if firestoreClient != nil && id != "" {
+			doc, err := firestoreClient.Collection("users").Doc(id).Get(r.Context())
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					writeJSON(w, http.StatusOK, map[string]interface{}{"user": nil})
+					return
+				}
+				writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+				return
+			}
+			var profile UserProfile
+			if err := doc.DataTo(&profile); err != nil {
+				writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, profile)
+			return
+		}
+
 		user, err := readUserProfile()
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
@@ -387,6 +435,16 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		if profile.CreatedAt == "" {
 			profile.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 		}
+		if firestoreClient != nil {
+			_, err := firestoreClient.Collection("users").Doc(profile.ID).Set(r.Context(), profile)
+			if err != nil {
+				writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, profile)
+			return
+		}
+
 		if err := writeJSONFile(filepath.Join(defaultDataFolder, "user.json"), profile); err != nil {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
@@ -400,6 +458,36 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 func logsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
+		userId := r.URL.Query().Get("userId")
+		if firestoreClient != nil {
+			query := firestoreClient.Collection("logs").Query
+			if userId != "" {
+				query = query.Where("userId", "==", userId)
+			}
+			query = query.OrderBy("loggedAt", firestore.Desc)
+			iter := query.Documents(r.Context())
+			defer iter.Stop()
+			logs := []FoodLog{}
+			for {
+				doc, err := iter.Next()
+				if err == iterator.Done {
+					break
+				}
+				if err != nil {
+					writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+					return
+				}
+				var logItem FoodLog
+				if err := doc.DataTo(&logItem); err != nil {
+					writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+					return
+				}
+				logs = append(logs, logItem)
+			}
+			writeJSON(w, http.StatusOK, logs)
+			return
+		}
+
 		logs, err := readLogs()
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -415,6 +503,15 @@ func logsHandler(w http.ResponseWriter, r *http.Request) {
 		if logItem.ID == "" {
 			logItem.ID = randomID("log_")
 		}
+		if firestoreClient != nil {
+			_, err := firestoreClient.Collection("logs").Doc(logItem.ID).Set(r.Context(), logItem)
+			if err != nil {
+				writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, logItem)
+			return
+		}
 		logs, _ := readLogs()
 		logs = append([]FoodLog{logItem}, logs...)
 		if err := writeJSONFile(filepath.Join(defaultDataFolder, "logs.json"), logs); err != nil {
@@ -426,6 +523,15 @@ func logsHandler(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, logsPathPrefix)
 		if id == "" {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id is required"})
+			return
+		}
+		if firestoreClient != nil {
+			_, err := firestoreClient.Collection("logs").Doc(id).Delete(r.Context())
+			if err != nil {
+				writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]string{"deleted": id})
 			return
 		}
 		logs, err := readLogs()
