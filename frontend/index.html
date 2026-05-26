@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soul Feast | Feed The Beast</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0a0a0a',
+            surface: '#111111',
+            elevated: '#1a1a1a',
+            border: '#2a2a2a',
+            'border-strong': '#444444',
+            text: '#f5f5f5',
+            muted: '#888888',
+            accent: '#ffffff'
+          },
+          fontFamily: {
+            sans: ['"Space Grotesk"', 'sans-serif'],
+            display: ['"Bebas Neue"', 'cursive'],
+            mono: ['"IBM Plex Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0a0a0a;
+      color: #f5f5f5;
+      /* Subtle crosshatch/grid texture */
+      background-image: 
+        linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111),
+        linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    /* Battle scar double-border effect */
+    .battle-border {
+      position: relative;
+      border: 2px solid #ffffff;
+      background-color: #111111;
+    }
+    .battle-border::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      right: -6px;
+      bottom: -6px;
+      border: 1px solid #444444;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0a0a0a;
+      border-left: 1px solid #2a2a2a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #444444;
+      border-radius: 0;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ffffff;
+    }
+
+    /* Hide number input arrows */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+  </style>
+
+  <!-- Import Map -->
+  </head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="./index.tsx"></script>
+<script type="module" src="/index.js"></script></body>
+</html>

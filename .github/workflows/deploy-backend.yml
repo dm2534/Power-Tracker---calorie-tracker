@@ -1,0 +1,36 @@
+name: Deploy Backend to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT }}
+          export_default_credentials: true
+      - name: Build Docker image
+        run: |
+          cd backend
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT }}/power-tracker-backend:$GITHUB_SHA .
+      - name: Push Docker image to Artifact Registry
+        run: |
+          docker push gcr.io/${{ secrets.GCP_PROJECT }}/power-tracker-backend:$GITHUB_SHA
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy power-tracker-backend \
+            --image gcr.io/${{ secrets.GCP_PROJECT }}/power-tracker-backend:$GITHUB_SHA \
+            --region ${{ secrets.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT }},GOOGLE_CLOUD_LOCATION=${{ secrets.GCP_LOCATION }},PROXY_HEADER=${{ secrets.PROXY_HEADER }},PORT=8080

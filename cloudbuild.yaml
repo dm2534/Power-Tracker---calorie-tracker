@@ -1,0 +1,6 @@
+steps:
+  - id: 'Build backend Docker image'
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/power-tracker-backend', 'backend']
+images:
+  - 'gcr.io/$PROJECT_ID/power-tracker-backend'

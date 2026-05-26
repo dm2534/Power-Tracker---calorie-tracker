@@ -1,0 +1,20 @@
+# Node artifacts
+node_modules/
+**/node_modules/
+
+# Frontend build output
+frontend/dist/
+
+# Backend local environment and runtime data
+backend/.env.local
+backend/data/
+backend/*.exe
+backend/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+

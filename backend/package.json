@@ -1,0 +1,10 @@
+{
+  "name": "power-tracker-go-backend",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Go backend proxy and analytics server",
+  "scripts": {
+    "start": "go run main.go",
+    "dev": "go run main.go"
+  }
+}
