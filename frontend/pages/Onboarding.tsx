@@ -14,18 +14,33 @@ export const Onboarding = () => {
     displayName: location.state?.name || 'Warrior',
     heightCm: 180,
     weightKg: 80,
-    age: 25,
+    targetWeightKg: 80,
+    birthDate: '2000-01-01',
     sex: 'M',
     goal: 'maintain',
+    dietType: 'none',
     activityLevel: 'moderate',
     proteinPct: 30,
     carbsPct: 40,
     fatPct: 30
   });
 
+  const getAge = (dobString: string) => {
+    if (!dobString) return 25;
+    const today = new Date();
+    const birthDate = new Date(dobString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const calculateCalories = () => {
+    const age = getAge(formData.birthDate || '2000-01-01');
     // Mifflin-St Jeor Equation
-    let bmr = (10 * formData.weightKg!) + (6.25 * formData.heightCm!) - (5 * formData.age!);
+    let bmr = (10 * formData.weightKg!) + (6.25 * formData.heightCm!) - (5 * age);
     bmr += formData.sex === 'M' ? 5 : -161;
     
     const multiplier = ACTIVITY_MULTIPLIERS[formData.activityLevel as keyof typeof ACTIVITY_MULTIPLIERS];
@@ -39,9 +54,11 @@ export const Onboarding = () => {
 
   const handleComplete = async () => {
     const target = calculateCalories();
+    const calculatedAge = getAge(formData.birthDate || '2000-01-01');
     const profile: UserProfile = {
       id: 'user_' + Date.now(),
       ...formData as any,
+      age: calculatedAge,
       calorieTarget: target,
       createdAt: new Date().toISOString()
     };
@@ -78,10 +95,14 @@ export const Onboarding = () => {
                   <Input type="number" value={formData.weightKg} onChange={e => setFormData({...formData, weightKg: Number(e.target.value)})} />
                 </div>
                 <div>
-                  <Label>Age</Label>
-                  <Input type="number" value={formData.age} onChange={e => setFormData({...formData, age: Number(e.target.value)})} />
+                  <Label>Target Weight (kg)</Label>
+                  <Input type="number" value={formData.targetWeightKg} onChange={e => setFormData({...formData, targetWeightKg: Number(e.target.value)})} />
                 </div>
                 <div>
+                  <Label>Date of Birth</Label>
+                  <Input type="date" value={formData.birthDate} onChange={e => setFormData({...formData, birthDate: e.target.value})} />
+                </div>
+                <div className="col-span-2">
                   <Label>Sex</Label>
                   <select 
                     className="w-full bg-surface border-2 border-border-strong text-white px-4 py-3 font-mono focus:border-white focus:outline-none rounded-none appearance-none"
@@ -126,6 +147,21 @@ export const Onboarding = () => {
                   <option value="moderate">MODERATE (3-5 days/week)</option>
                   <option value="active">ACTIVE (6-7 days/week)</option>
                   <option value="very_active">VERY ACTIVE (Physical job + training)</option>
+                </select>
+              </div>
+              <div className="pt-4">
+                <Label>Diet Type</Label>
+                <select 
+                  className="w-full bg-surface border-2 border-border-strong text-white px-4 py-3 font-mono focus:border-white focus:outline-none rounded-none appearance-none"
+                  value={formData.dietType} 
+                  onChange={e => setFormData({...formData, dietType: e.target.value})}
+                >
+                  <option value="none">NO SPECIFIC DIET</option>
+                  <option value="keto">KETOGENIC</option>
+                  <option value="vegan">VEGAN</option>
+                  <option value="vegetarian">VEGETARIAN</option>
+                  <option value="paleo">PALEO</option>
+                  <option value="low-carb">LOW CARB</option>
                 </select>
               </div>
               <div className="flex gap-4 mt-8">

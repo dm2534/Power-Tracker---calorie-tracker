@@ -40,7 +40,7 @@ export const Profile = () => {
           <Button variant="ghost" onClick={handleLogout}>LOGOUT</Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
             <Label>Height</Label>
             <p className="font-mono text-xl">{user.heightCm} cm</p>
@@ -50,12 +50,28 @@ export const Profile = () => {
             <p className="font-mono text-xl">{user.weightKg} kg</p>
           </div>
           <div>
-            <Label>Age</Label>
-            <p className="font-mono text-xl">{user.age}</p>
+            <Label>Target Weight</Label>
+            <p className="font-mono text-xl">{user.targetWeightKg || user.weightKg} kg</p>
+          </div>
+          <div>
+            <Label>Age (DOB)</Label>
+            <p className="font-mono text-xl">{user.age} yrs ({user.birthDate || 'N/A'})</p>
           </div>
           <div>
             <Label>Target</Label>
             <p className="font-mono text-xl">{user.calorieTarget} kcal</p>
+          </div>
+          <div>
+            <Label>Objective</Label>
+            <p className="font-mono text-xl uppercase">{user.goal}</p>
+          </div>
+          <div>
+            <Label>Diet Type</Label>
+            <p className="font-mono text-xl uppercase">{user.dietType || 'none'}</p>
+          </div>
+          <div>
+            <Label>Activity Level</Label>
+            <p className="font-mono text-xl uppercase">{user.activityLevel?.replace('_', ' ') || 'moderate'}</p>
           </div>
         </div>
       </Card>

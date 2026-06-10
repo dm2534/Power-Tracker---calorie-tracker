@@ -1,7 +1,8 @@
-import { UserProfile, FoodLog } from '../types';
+import { UserProfile, FoodLog, DailyActivity } from '../types';
 
 const USER_KEY = 'soul_feast_user';
 const LOGS_KEY = 'soul_feast_logs';
+const ACTIVITY_KEY = 'soul_feast_activity';
 
 const storage = {
   getUser: (): UserProfile | null => {
@@ -14,6 +15,7 @@ const storage = {
   clearUser: (): void => {
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(LOGS_KEY);
+    localStorage.removeItem(ACTIVITY_KEY);
   },
   getLogs: (): FoodLog[] => {
     const data = localStorage.getItem(LOGS_KEY);
@@ -21,6 +23,13 @@ const storage = {
   },
   setLogs: (logs: FoodLog[]): void => {
     localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
+  },
+  getActivities: (): DailyActivity[] => {
+    const data = localStorage.getItem(ACTIVITY_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+  setActivities: (acts: DailyActivity[]): void => {
+    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(acts));
   },
 };
 
@@ -81,4 +90,30 @@ export const db = {
     const today = new Date().toISOString().split('T')[0];
     return logs.filter((l) => l.loggedAt.startsWith(today));
   },
+  getActivities: (): DailyActivity[] => storage.getActivities(),
+  async fetchActivity(userId: string, date: string): Promise<DailyActivity> {
+    const act = await apiFetch<DailyActivity>(`/api/activity?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(date)}`);
+    const acts = [act, ...storage.getActivities().filter(a => !(a.userId === userId && a.logDate === date))];
+    storage.setActivities(acts);
+    return act;
+  },
+  async saveActivity(activity: DailyActivity): Promise<DailyActivity> {
+    const saved = await apiFetch<DailyActivity>('/api/activity', {
+      method: 'POST',
+      body: JSON.stringify(activity),
+    });
+    const acts = [saved, ...storage.getActivities().filter(a => !(a.userId === saved.userId && a.logDate === saved.logDate))];
+    storage.setActivities(acts);
+    return saved;
+  },
+  async fetchAllActivities(userId: string): Promise<DailyActivity[]> {
+    const acts = await apiFetch<DailyActivity[]>(`/api/activity?userId=${encodeURIComponent(userId)}`);
+    storage.setActivities(acts);
+    return acts;
+  },
+  getTodayActivity: (): DailyActivity | null => {
+    const acts = storage.getActivities();
+    const today = new Date().toISOString().split('T')[0];
+    return acts.find(a => a.logDate === today) || null;
+  }
 };

@@ -5,12 +5,14 @@ const SYSTEM_INSTRUCTION = `You are a precise nutrition analysis AI. Your job is
 export const analyzeFood = async (
   text?: string,
   imageBase64?: string,
-  mimeType?: string
+  mimeType?: string,
+  dietType?: string
 ): Promise<GeminiNutritionResponse> => {
   const payload: Record<string, string> = {};
   if (text) payload.text = text;
   if (imageBase64) payload.imageBase64 = imageBase64;
   if (mimeType) payload.mimeType = mimeType;
+  if (dietType) payload.dietType = dietType;
 
   const response = await fetch('/api/analyze', {
     method: 'POST',
@@ -26,4 +28,24 @@ export const analyzeFood = async (
   }
 
   return response.json();
+};
+
+export const sendChatMessage = async (
+  messages: { role: string; content: string }[]
+): Promise<string> => {
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Chat failed: ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data.reply;
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Flame, ScrollText, Skull } from 'lucide-react';
+import { Flame, ScrollText, Skull, MessageSquare } from 'lucide-react';
 import { KenpachiLogo, SwordIcon } from '../ui/Icons';
 import { KENPACHI_QUOTES } from '../../constants';
 import { db } from '../../services/db';
@@ -39,6 +39,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     { path: '/dashboard', icon: SwordIcon, label: 'POWER' },
     { path: '/log', icon: Flame, label: 'CONSUME' },
     { path: '/history', icon: ScrollText, label: 'FALLEN' },
+    { path: '/chat', icon: MessageSquare, label: 'COMMUNE' },
     { path: '/profile', icon: Skull, label: 'VITALS' },
   ];
 

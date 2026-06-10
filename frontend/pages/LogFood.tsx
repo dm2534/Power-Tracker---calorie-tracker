@@ -39,11 +39,13 @@ export const LogFood = () => {
     setError(null);
     
     try {
+      const user = db.getUser();
       let mimeType = imageFile?.type;
       const response = await analyzeFood(
         textInput || undefined, 
         imagePreview || undefined,
-        mimeType
+        mimeType,
+        user?.dietType || 'none'
       );
       setResult(response);
     } catch (err: any) {
@@ -51,6 +53,45 @@ export const LogFood = () => {
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleItemChange = (idx: number, field: string, val: any) => {
+    if (!result) return;
+    const updatedItems = [...result.food_items];
+    let parsedVal = val;
+    if (['calories', 'protein_g', 'carbs_g', 'fat_g', 'quantity_grams'].includes(field)) {
+      parsedVal = val === '' ? 0 : Number(val);
+    }
+    updatedItems[idx] = {
+      ...updatedItems[idx],
+      [field]: parsedVal
+    };
+    recalculateTotals(updatedItems);
+  };
+
+  const handleDeleteItem = (idx: number) => {
+    if (!result) return;
+    const updatedItems = result.food_items.filter((_, i) => i !== idx);
+    recalculateTotals(updatedItems);
+  };
+
+  const recalculateTotals = (items: any[]) => {
+    if (!result) return;
+    const totals = items.reduce((acc, item) => {
+      acc.calories += item.calories || 0;
+      acc.protein_g += item.protein_g || 0;
+      acc.carbs_g += item.carbs_g || 0;
+      acc.fat_g += item.fat_g || 0;
+      acc.fiber_g += item.fiber_g || 0;
+      acc.sugar_g += item.sugar_g || 0;
+      return acc;
+    }, { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fiber_g: 0, sugar_g: 0 });
+
+    setResult({
+      ...result,
+      food_items: items,
+      totals: totals
+    });
   };
 
   const handleSave = async () => {
@@ -178,16 +219,81 @@ export const LogFood = () => {
             </div>
 
             <div className="space-y-4 mb-8">
-              <h4 className="font-bold uppercase tracking-widest text-muted border-b border-border-strong pb-2">IDENTIFIED ITEMS</h4>
+              <h4 className="font-bold uppercase tracking-widest text-muted border-b border-border-strong pb-2">IDENTIFIED ITEMS (CLICK TEXT OR MACROS TO EDIT)</h4>
               {result.food_items.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center font-mono text-sm">
-                  <div className="flex items-center gap-2">
-                    <BellIcon type={item.confidence === 'high' ? 'solid' : item.confidence === 'medium' ? 'half' : 'outline'} />
-                    <span>{item.name} ({item.quantity})</span>
+                <div key={idx} className="border border-border-strong p-4 bg-surface space-y-3 relative group hover:border-white transition-colors">
+                  <div className="flex gap-4 items-center justify-between">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={e => handleItemChange(idx, 'name', e.target.value)}
+                        className="bg-transparent border-b border-transparent hover:border-border-strong focus:border-white focus:outline-none font-bold uppercase tracking-wider text-white w-full"
+                      />
+                    </div>
+                    <div className="w-24">
+                      <input
+                        type="text"
+                        value={item.quantity}
+                        onChange={e => handleItemChange(idx, 'quantity', e.target.value)}
+                        className="bg-transparent border-b border-transparent hover:border-border-strong focus:border-white focus:outline-none font-mono text-muted text-sm text-right w-full"
+                        placeholder="portion"
+                      />
+                    </div>
+                    <button
+                      onClick={() => handleDeleteItem(idx)}
+                      className="text-muted hover:text-red-600 transition-colors px-2 text-xl font-bold"
+                      title="Delete item"
+                    >
+                      &times;
+                    </button>
                   </div>
-                  <span>{item.calories} kcal</span>
+                  
+                  <div className="grid grid-cols-4 gap-2 font-mono text-xs">
+                    <div>
+                      <span className="text-muted block text-[10px] uppercase">KCAL</span>
+                      <input
+                        type="number"
+                        value={item.calories}
+                        onChange={e => handleItemChange(idx, 'calories', e.target.value)}
+                        className="bg-elevated border border-border-strong focus:border-white focus:outline-none px-2 py-1 text-white w-full"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-muted block text-[10px] uppercase">PRO (g)</span>
+                      <input
+                        type="number"
+                        value={item.protein_g}
+                        onChange={e => handleItemChange(idx, 'protein_g', e.target.value)}
+                        className="bg-elevated border border-border-strong focus:border-white focus:outline-none px-2 py-1 text-white w-full"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-muted block text-[10px] uppercase">CARB (g)</span>
+                      <input
+                        type="number"
+                        value={item.carbs_g}
+                        onChange={e => handleItemChange(idx, 'carbs_g', e.target.value)}
+                        className="bg-elevated border border-border-strong focus:border-white focus:outline-none px-2 py-1 text-white w-full"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-muted block text-[10px] uppercase">FAT (g)</span>
+                      <input
+                        type="number"
+                        value={item.fat_g}
+                        onChange={e => handleItemChange(idx, 'fat_g', e.target.value)}
+                        className="bg-elevated border border-border-strong focus:border-white focus:outline-none px-2 py-1 text-white w-full"
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
+              {result.food_items.length === 0 && (
+                <div className="text-center font-mono text-muted py-8 border border-dashed border-border-strong">
+                  ALL ITEMS REMOVED. MEAL EMPTY.
+                </div>
+              )}
             </div>
 
             <div className="bg-surface p-4 border border-border-strong font-mono text-xs text-muted mb-8">

@@ -3,15 +3,28 @@ export interface UserProfile {
   displayName: string;
   heightCm: number;
   weightKg: number;
+  targetWeightKg: number;
+  birthDate: string;
   age: number;
   sex: 'M' | 'F';
   goal: 'cut' | 'maintain' | 'bulk';
+  dietType: string;
   activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
   calorieTarget: number;
   proteinPct: number;
   carbsPct: number;
   fatPct: number;
   createdAt: string;
+}
+
+export interface DailyActivity {
+  id?: string;
+  userId: string;
+  logDate: string; // YYYY-MM-DD
+  caloriesBurnt: number;
+  waterIngestedMl: number;
+  steps: number;
+  updatedAt?: string;
 }
 
 export interface FoodItem {

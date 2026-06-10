@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { LogFood } from './pages/LogFood';
 import { History } from './pages/History';
 import { Profile } from './pages/Profile';
+import { Chat } from './pages/Chat';
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/log" element={<LogFood />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/chat" element={<Chat />} />
         </Routes>
       </Layout>
     </Router>
