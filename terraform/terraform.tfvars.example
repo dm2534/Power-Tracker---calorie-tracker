@@ -1,0 +1,36 @@
+###############################################################################
+# Power Tracker — Example Variable Values
+#
+# HOW TO USE:
+#   1. Copy this file:  cp terraform.tfvars.example terraform.tfvars
+#   2. Fill in your real values below
+#   3. terraform.tfvars is git-ignored — never commit it
+###############################################################################
+
+# ── REQUIRED ──────────────────────────────────────────────────────────────────
+
+# Your GCP Project ID (find it in the Cloud Console header)
+project_id = "YOUR_GCP_PROJECT_ID"
+
+# A cryptographically random string used as the internal API proxy secret.
+# Generate one with:  openssl rand -hex 32
+proxy_header_value = "REPLACE_WITH_GENERATED_SECRET"
+
+# ── OPTIONAL (change only if needed) ─────────────────────────────────────────
+
+# GCP region — keep this consistent across all resources
+region = "us-central1"
+
+# Firestore multi-region location — cannot be changed after first apply
+firestore_location = "nam5"
+
+# Firebase Hosting site ID — becomes https://<this>.web.app
+# Must be globally unique; leave it matching your project_id or pick a short slug
+firebase_site_id = "YOUR_GCP_PROJECT_ID"
+
+# Docker image tag for the Cloud Run backend
+# Use "latest" for first deploy; pin to a git SHA for subsequent releases
+image_tag = "latest"
+
+# Maximum Cloud Run instances (scale-to-zero min is always 0)
+max_instances = 5

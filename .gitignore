@@ -18,3 +18,13 @@ Thumbs.db
 # IDE files
 .vscode/
 
+# Terraform — never commit state or real variable values
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
+terraform/*.tfvars
+terraform/override.tf
+terraform/override.tf.json
+
