@@ -33,4 +33,4 @@ jobs:
             --region ${{ secrets.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT }},GOOGLE_CLOUD_LOCATION=${{ secrets.GCP_LOCATION }},PROXY_HEADER=${{ secrets.PROXY_HEADER }},PORT=8080
+            --set-env-vars GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT }},GOOGLE_CLOUD_LOCATION=${{ secrets.GCP_LOCATION }},PROXY_HEADER=${{ secrets.PROXY_HEADER }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},PORT=8080

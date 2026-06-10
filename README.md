@@ -32,10 +32,24 @@ This launches the frontend and backend together from the root workspace. The fro
 A GitHub Actions workflow is included at `.github/workflows/deploy-frontend.yml`.
 Push to `main` and the workflow will build `frontend/dist` and deploy the static app to GitHub Pages.
 
-### Cloud Run (backend)
+### Cloud Run (single service)
 
-A Cloud Run deployment workflow is included at `.github/workflows/deploy-backend.yml`.
-It builds the Go backend Docker image from `backend/Dockerfile`, pushes it to Google Container Registry, and deploys to Cloud Run.
+The app can now be deployed as one Cloud Run service that serves both the React frontend and the Go API.
+
+1. Build and push the combined container image:
+   ```bash
+   docker build -f backend/Dockerfile -t us-central1-docker.pkg.dev/<PROJECT_ID>/power-tracker-one-service/backend:latest .
+   docker push us-central1-docker.pkg.dev/<PROJECT_ID>/power-tracker-one-service/backend:latest
+   ```
+2. Apply the Terraform package in `terraform/`:
+   ```bash
+   cd terraform
+   terraform init
+   terraform apply \
+     -var="project_id=<PROJECT_ID>" \
+     -var="proxy_header_value=<RANDOM_SECRET>" \
+     -var="gemini_api_key=<GEMINI_API_KEY>"
+   ```
 
 Secrets required for backend deployment:
 
